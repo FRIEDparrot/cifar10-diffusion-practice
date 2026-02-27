@@ -220,10 +220,10 @@ def generate_images(model: DiffusionModel, save_dir: str, epoch: int, num_sample
 
 @dataclass
 class TrainConfigs:
-    max_epoch:int = 80
-    lr: float = 2e-5
+    max_epoch:int = 2   # 300 - 400  for real training
+    lr: float = 3e-4
     weight_decay: float = 1e-5
-    batch_size: int = 96
+    batch_size: int = 128
     repo_id: str = "FriedParrot/ddpm-cifar10-diffusion"
     local_save_dir: str = "./checkpoints"
 
@@ -253,7 +253,7 @@ def main():
         )
         wandb.init(
             project="diffusion-cifar10",
-            name="diffusion-cifar10-train",
+            name="diffusion-cifar10-train-optimized-test",
             config=configs.__dict__,
         )
 
@@ -267,7 +267,7 @@ def main():
     unet = UNet2DModel.from_pretrained(model_repo).to("cuda")
     # read from json file
     scheduler_config = json.load(open("ddpm_scheduler_cfg.json"))
-    scheduler:DDPMScheduler = DDPMScheduler.from_config(scheduler_config)
+    scheduler:DDPMScheduler = DDPMScheduler.from_pretrained(model_repo)
 
     optimizer = torch.optim.Adam(
         unet.parameters(),
@@ -286,8 +286,8 @@ def main():
     test_loader = DataLoader(train_set, batch_size=8)
 
     model = DiffusionModel(unet, scheduler)
-    model, optimizer, dataloader, scheduler, val_loader, test_loader = accelerator.prepare(
-        model, optimizer, dataloader, scheduler, val_loader, test_loader
+    model, optimizer, dataloader, val_loader, test_loader, lr_scheduler = accelerator.prepare(
+        model, optimizer, dataloader, val_loader, test_loader, lr_scheduler
     )
     global_step = 0
     max_epoch = configs.max_epoch
@@ -320,37 +320,39 @@ def main():
 
         val_loss = validate(model, val_loader, accelerator)
         # Also test the denoising results on a few test images
+
         if accelerator.is_main_process:
             wandb.log({
                 "train/loss_epoch": avg_loss,
                 "val/loss": val_loss,
                 "epoch": epoch
             })
-            # Validation: generate and save images
-            save_path, generated = generate_images(
-                model, save_dir=save_dir, epoch=epoch, device=accelerator.device
-            )
-            test_batch = next(iter(test_loader))
-            test_image_path = "test_denoising.png"
-            test_denoising_results(
-                model=model,
-                scheduler=scheduler,
-                accelerator=accelerator,
-                batch=test_batch,
-                test_num=8,
-                save_path=test_image_path
-            )
-            wandb.log({
-                "train/test_image": wandb.Image(test_image_path, caption=f"Epoch {epoch} - Denoising Test"),
-                "val/generated_samples": wandb.Image(save_path, caption=f"Epoch {epoch} - Generated Samples"),
-                "epoch": epoch,
-            })
 
         if epoch % 10 == 0 :
+            # save checkpoints
             accelerator.wait_for_everyone()
             if accelerator.is_main_process:
                 os.makedirs("./checkpoints", exist_ok=True)
-                accelerator.save_model(model, "./checkpoints/checkpoint_epoch_{epoch:03d}.pt")
+                # Validation: generate and save images
+                save_path, generated = generate_images(
+                    model, save_dir=save_dir, epoch=epoch, device=accelerator.device
+                )
+                test_batch = next(iter(test_loader))
+                test_image_path = "test_denoising.png"
+                test_denoising_results(
+                    model=model,
+                    scheduler=scheduler,
+                    accelerator=accelerator,
+                    batch=test_batch,
+                    test_num=8,
+                    save_path=test_image_path
+                )
+                wandb.log({
+                    "train/test_image": wandb.Image(test_image_path, caption=f"Epoch {epoch} - Denoising Test"),
+                    "val/generated_samples": wandb.Image(save_path, caption=f"Epoch {epoch} - Generated Samples"),
+                    "epoch": epoch,
+                })
+                accelerator.save_model(model, f"./checkpoints/checkpoint_epoch_{epoch:03d}.pt")
 
     accelerator.end_training()  # ensures all processes synchronize before the main process handles
 
@@ -358,11 +360,7 @@ def main():
         wandb.finish()
         model_save_path = "./checkpoints/cifar_diffusion_model.pt"
         accelerator.save_model(model, model_save_path)
-        api.upload_file(
-            path_or_fileobj=model_save_path,
-            path_in_repo=model_save_path,
-            repo_id=configs.repo_id,
-        )
+
 
 if __name__ == "__main__":
     main()
