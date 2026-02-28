@@ -21,6 +21,10 @@ import os
 
 """
 Practice for diffusion model on CIFAR10 dataset. 
+
+Remove the clamp in forward_diffusion
+Fix noise generation in test_denoising_results — move it inside the loop
+Add importance sampling for timesteps (optional but helps high-t learning)
 """
 #region Utility functions
 def denormalize(x) -> torch.Tensor:
@@ -220,12 +224,13 @@ def generate_images(model: DiffusionModel, save_dir: str, epoch: int, num_sample
 
 @dataclass
 class TrainConfigs:
-    max_epoch:int = 2   # 300 - 400  for real training
+    max_epoch:int = 400   # 300 - 400  for real training
     lr: float = 3e-4
     weight_decay: float = 1e-5
     batch_size: int = 128
     repo_id: str = "FriedParrot/ddpm-cifar10-diffusion"
     local_save_dir: str = "./checkpoints"
+    checkpoint_epoch = 10
 
 def main():
     accelerator = Accelerator(
@@ -253,7 +258,7 @@ def main():
         )
         wandb.init(
             project="diffusion-cifar10",
-            name="diffusion-cifar10-train-optimized-test",
+            name="diffusion-cifar10-train-optimized",
             config=configs.__dict__,
         )
 
@@ -264,9 +269,8 @@ def main():
     val_set.set_transform(transform)
 
     model_repo = "google/ddpm-cifar10-32"
-    unet = UNet2DModel.from_pretrained(model_repo).to("cuda")
-    # read from json file
-    scheduler_config = json.load(open("ddpm_scheduler_cfg.json"))
+    # not load weights since we will train from scratch, but use the same architecture as the pretrained model
+    unet = UNet2DModel.from_config(model_repo)
     scheduler:DDPMScheduler = DDPMScheduler.from_pretrained(model_repo)
 
     optimizer = torch.optim.Adam(
@@ -297,7 +301,7 @@ def main():
         progress_bar = tqdm(
             range(len(dataloader)),
             disable=not accelerator.is_main_process,  # Only show on the main GPU
-            desc=f"Epoch {epoch}"
+            desc=f"Epoch {epoch} / {max_epoch}"
         )
         for batch in dataloader:
             images = batch["img"]
@@ -328,7 +332,7 @@ def main():
                 "epoch": epoch
             })
 
-        if epoch % 10 == 0 :
+        if epoch % configs.checkpoint_epoch == 0 :
             # save checkpoints
             accelerator.wait_for_everyone()
             if accelerator.is_main_process:
