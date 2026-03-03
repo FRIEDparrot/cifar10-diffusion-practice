@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 model_repo = "google/ddpm-cifar10-32"
 unet = UNet2DModel.from_pretrained(model_repo)
 
-scheduler_config = json.load(open("../ddpm_scheduler_cfg.json"))
+scheduler_config = json.load(open("../scripts/dogs/ddpm_scheduler_cfg.json"))
 scheduler:DDPMScheduler = DDPMScheduler.from_config(scheduler_config)
 model = DiffusionModel(unet=unet, noise_scheduler=scheduler)
 dataset_link = "uoft-cs/cifar10"

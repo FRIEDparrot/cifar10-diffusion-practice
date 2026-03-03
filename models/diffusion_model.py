@@ -5,6 +5,10 @@ from diffusers import UNet2DModel, DDPMScheduler
 from diffusers.utils.torch_utils import randn_tensor
 
 class DiffusionModel(nn.Module):
+    """
+    Simple diffusion model that wraps a UNet2DModel
+        and DDPMScheduler to compute noise predictions and diffusion loss.
+    """
     def __init__(self, unet: UNet2DModel, noise_scheduler: DDPMScheduler):
         super().__init__()
         self.model = unet

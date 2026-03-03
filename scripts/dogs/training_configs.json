@@ -1,5 +1,5 @@
 {
-  "max_epoch": 100,
+  "max_epoch": 250,
   "dataset_name": "huggan/few-shot-dog",
   "model_repo": "anton-l/ddpm-butterflies-128",
   "image_size": 128,
@@ -7,14 +7,14 @@
   "lr": 0.0001,
   "lr_warmup_steps": 500,
   "weight_decay": 1e-05,
-  "train_batch_size": 8,
-  "eval_batch_size": 8,
+  "train_batch_size": 12,
+  "eval_batch_size": 12,
   "gradient_accumulation_steps": 1,
   "remote_repo_id": "FriedParrot/ddpm-few-shot-dog-128",
   "checkpoint_save_dir": "./checkpoints",
   "validation_save_dir": "./validation_samples",
   "checkpoint_epoch": 5,
   "overwrite_output_dir": true,
-  "reverse_diffusion_steps": 100,
+  "reverse_diffusion_steps": 500,
   "config_save_dir": "./training_configs.json"
 }

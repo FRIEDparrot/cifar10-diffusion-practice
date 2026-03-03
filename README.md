@@ -1,14 +1,37 @@
 # Simple Diffusion Model Practice 
 
-This repo load the cifar10 dataset, and use `google/ddpm-cifar10-32` as the model.
-We load it without the pretrained weights, and train it from scratch.
+This repo contains some simple practices for training diffusion models. There are multiple examples under `scripts` folder.
+
+You can also use this as a module for constructing your own diffusion model training pipeline. The `scripts` folder contains some examples for training diffusion models.
+This is very easy to migrate to other datasets and models. 
+
+### Config accelerate Options  
 
 to config the training parameters : 
 ```shell
 accelerate config 
 ```
 
-to launch the training
+
+
+### Exm1: Fine-Tuned diffusion model on dog dataset 
+
+- Model : "anton-l/ddpm-butterflies-128"
+- Dataset : "huggan/few-shot-dog" (This dataset contains 389 images of dogs, 90% for training and 10% for validation)
+- Train on resolution 128
+
+to launch this training : 
 ```shell
-accelerate launch main.py 
+accelerate launch -m scripts.dogs.train_shot_dog
+```
+
+### Exm2: Train a diffusion model on cifar10 dataset
+
+- Model : use `google/ddpm-cifar10-32` as the model.  (We load it without the pretrained weights, so the model is trained from scratch)
+- Dataset : "cifar10" (This dataset contains 60000 images of 10 classes, 50000 for training and 10000 for validation)
+- Train on resolution 32
+
+to launch this training : 
+```shell
+accelerate launch -m scripts.cifar10.train_cifar10
 ```

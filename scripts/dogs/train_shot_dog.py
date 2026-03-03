@@ -15,11 +15,14 @@ from utils import show_grid_images
 from models import DiffusionModel
 
 """
-Practice for diffusion model
+Model : "anton-l/ddpm-butterflies-128"
+Dataset :  huggan/few-shot-dog (contains 389 images of dogs, 90% for training and 10 for validation)
+Train on resolution 128
 
-Fix noise generation in test_denoising_results — move it inside the loop
-Add importance sampling for timesteps (optional but helps high-t learning)
+originally drafted model, contains most training details. 
 """
+
+os.chdir(os.path.dirname(__file__))  # change to current directory for saving configs and checkpoints
 
 #region "Train and Validation"
 def train_step(
@@ -45,9 +48,9 @@ def train_step(
         batch_size = x.shape[0]
         t = torch.randint(0, num_timesteps, (batch_size,), device=accelerator.device).long()
         with accelerator.accumulate(model):
+            optimizer.zero_grad()
             x_noisy, loss = model.diffusion_loss(x, t)
             # standard loss backward step
-            optimizer.zero_grad()
             accelerator.backward(loss)  # compute gradient
             accelerator.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
@@ -123,16 +126,19 @@ def generate_images(
 def main():
     # Config auto-saves to config_save_dir upon creation
     config = TrainConfigs(
-        max_epoch=100,  # pretrained model
+        max_epoch=250,  # pretrained model
         dataset_name="huggan/few-shot-dog",
         image_size=128,
-        train_batch_size=8,
-        eval_batch_size=8,
+        train_batch_size=12,
+        eval_batch_size=12,
+        lr=1e-4,
+        lr_warmup_steps=500,
         # unconditional diffusion model
         model_repo = "anton-l/ddpm-butterflies-128",
         image_field="image",
         remote_repo_id="FriedParrot/ddpm-few-shot-dog-128",
         checkpoint_epoch=5,
+        reverse_diffusion_steps=500, # higher quality
     )  # all process needs it
     accelerator = Accelerator(
         device_placement=True,
@@ -251,12 +257,6 @@ def main():
             model,
             save_directory=os.path.join(config.checkpoint_save_dir, "final_model.pt")
         )
-        # since hf-mirror.com don't support uploading, not upload, only save model
-        # api.upload_file(
-        #     path_or_fileobj=os.path.join(config.checkpoint_save_dir, "final_model.pt"),
-        #     path_in_repo="final_model.pt",
-        #     repo_id=config.remote_repo_id,
-        # )
         accelerator.print(f"Final model was successfully saved to {config.checkpoint_save_dir}.")
 
 if __name__ == "__main__":

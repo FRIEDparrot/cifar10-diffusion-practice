@@ -1,7 +1,7 @@
 .idea
-wandb
-checkpoints
-validation_samples
+**/wandb
+**/checkpoints
+**/validation_samples
 AGENTS.md
 **/*.pt
 **/hf_cache
