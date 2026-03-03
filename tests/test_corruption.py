@@ -3,7 +3,7 @@ from datasets import load_dataset
 from diffusers import DDPMScheduler
 import matplotlib.pyplot as plt
 from diffusers.utils.torch_utils import randn_tensor
-from unconditional import forward_diffusion, transform, denormalize
+from models.diffusion_model import forward_diffusion, transform, denormalize
 
 model_repo = "google/ddpm-cifar10-32"
 dataset = load_dataset("uoft-cs/cifar10", split="test")

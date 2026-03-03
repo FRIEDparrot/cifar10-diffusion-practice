@@ -1,8 +1,0 @@
-{
-  "max_epoch": 400,
-  "lr": 0.0003,
-  "weight_decay": 1e-05,
-  "batch_size": 128,
-  "repo_id": "FriedParrot/ddpm-cifar10-diffusion",
-  "local_save_dir": "./checkpoints"
-}

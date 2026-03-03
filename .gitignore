@@ -6,4 +6,4 @@ AGENTS.md
 **/*.pt
 **/hf_cache
 
-ddpm_usage.py
+tests

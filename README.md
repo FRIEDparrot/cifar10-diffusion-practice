@@ -8,14 +8,7 @@ to config the training parameters :
 accelerate config 
 ```
 
-to launch the training  
+to launch the training
 ```shell
-accelerate launch unconditional.py 
+accelerate launch main.py 
 ```
-
-That's what it is at start : 
-![samples_epoch_000.png](img/samples_epoch_000.png)
-
-![test_denoising_epoch_0.png](img/test_denoising_epoch_0.png)
-
-And that's what it is at the end :

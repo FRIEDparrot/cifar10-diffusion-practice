@@ -3,16 +3,16 @@ import time
 
 from datasets import load_dataset
 from accelerate import Accelerator
-from unconditional import UNet2DModel, DiffusionModel, DDPMScheduler
-from unconditional import test_denoising_results, transform, generate_images
+from models.diffusion_model import UNet2DModel, DiffusionModel, DDPMScheduler
+from models.diffusion_model import test_denoising_results, transform, generate_images
 from torch.utils.data import DataLoader
 
 model_repo = "google/ddpm-cifar10-32"
 unet = UNet2DModel.from_pretrained(model_repo)
 
-scheduler_config = json.load(open("ddpm_scheduler_cfg.json"))
+scheduler_config = json.load(open("../ddpm_scheduler_cfg.json"))
 scheduler:DDPMScheduler = DDPMScheduler.from_config(scheduler_config)
-model = DiffusionModel(unet=unet, scheduler=scheduler)
+model = DiffusionModel(unet=unet, noise_scheduler=scheduler)
 dataset_link = "uoft-cs/cifar10"
 dataset = load_dataset(dataset_link, split="train").with_format("torch")
 dataset.set_transform(transform)
@@ -34,7 +34,7 @@ test_denoising_results(
     scheduler=scheduler,
     accelerator=accelerator,
     batch=batch,
-    save_path="./test_result.png",
+    save_path="test_result.png",
     test_num=4,
 )
 print(f"Time taken for test_denoising_results: {time.time() - t:.2f} seconds")
