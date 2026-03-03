@@ -24,7 +24,7 @@ def show_grid_images(
     :return:
     """
     x = denormalize(x)  # Rescale to [0, 1]
-    grid = make_grid(x, nrow=nrow, normalize=True)  # [C, H_new, W_new]
+    grid = make_grid(x, nrow=nrow, normalize=False)  # [C, H_new, W_new] - already normalized
     grid_img = grid.detach().cpu().permute(1, 2, 0).numpy() # [H_new, W_new, C]
     img = Image.fromarray((grid_img * 255).astype(np.uint8))
     plt.imshow(img)

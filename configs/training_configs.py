@@ -1,7 +1,9 @@
 import torch
+import json
+import os
 from datasets import load_dataset
 from torchvision import transforms
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from torch.utils.data import DataLoader
 
 @dataclass
@@ -22,6 +24,40 @@ class TrainConfigs:
     validation_save_dir: str = field(default="./validation_samples")
     checkpoint_epoch: int = field(default=10)
     overwrite_output_dir: bool = field(default=True)
+    reverse_diffusion_steps: int = field(default=100)  # number of steps for reverse diffusion during validation
+    config_save_dir: str = field(default="./training_configs.json")
+
+    def __post_init__(self):
+        """Automatically save config after initialization"""
+        self.save()
+
+    def save(self, path: str = None):
+        """
+        Save the configuration to a JSON file.
+
+        :param path: Optional custom path to save to. If None, uses config_save_dir
+        """
+        save_path = path if path is not None else self.config_save_dir
+        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True)
+
+        with open(save_path, 'w') as f:
+            json.dump(asdict(self), f, indent=2)
+
+        return save_path
+
+    @classmethod
+    def load(cls, path: str):
+        """
+        Load configuration from a JSON file.
+
+        :param path: Path to the JSON config file
+        :return: TrainConfigs instance
+        """
+        with open(path, 'r') as f:
+            config_dict = json.load(f)
+
+        return cls(**config_dict)
+
 
 def load_dataloaders(
     config: TrainConfigs,

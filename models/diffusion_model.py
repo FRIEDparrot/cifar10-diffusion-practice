@@ -18,12 +18,14 @@ class DiffusionModel(nn.Module):
         self, x: torch.Tensor, t: torch.IntTensor,
     ):
         """
-        Do an epoch for training the diffusion model
-        Generate random tensor, do a `forward` and compute the loss
+        Compute diffusion loss: MSE between predicted and actual noise.
 
-        return the loss
+        Note: Does not modify model's train/eval mode - caller should set appropriately.
+
+        :param x: Input images [B, C, H, W]
+        :param t: Timesteps [B]
+        :return: (noised_images, loss)
         """
-        self.train()
         noise = randn_tensor(x.shape, device=x.device)  # [B, C, H, W]
         x_noisy = self.noise_scheduler.add_noise(x, noise, t)
         noise_pred = self(x_noisy, t)
