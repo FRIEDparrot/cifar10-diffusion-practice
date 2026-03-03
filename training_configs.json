@@ -1,5 +1,5 @@
 {
-  "max_epoch": 2,
+  "max_epoch": 100,
   "dataset_name": "huggan/few-shot-dog",
   "model_repo": "anton-l/ddpm-butterflies-128",
   "image_size": 128,

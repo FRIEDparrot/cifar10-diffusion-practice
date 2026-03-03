@@ -108,7 +108,7 @@ def generate_images(
     # Start from pure Gaussian noise
     x = torch.randn(num_samples, 3, config.image_size, config.image_size, device=device)
     # Reverse diffusion loop (use fewer steps for faster validation)
-    scheduler.set_timesteps(config.reverse_diffusion_steps)  # Use 50 steps instead of 1000 for faster inference
+    scheduler.set_timesteps(config.reverse_diffusion_steps)  # Use 50-100 steps instead of 1000 for faster inference
     for t in scheduler.timesteps:
         t_batch = torch.full((num_samples,), t, device=device, dtype=torch.long)
         noise_pred = model(x, t_batch)
@@ -123,7 +123,7 @@ def generate_images(
 def main():
     # Config auto-saves to config_save_dir upon creation
     config = TrainConfigs(
-        max_epoch=2,  # pretrained model
+        max_epoch=100,  # pretrained model
         dataset_name="huggan/few-shot-dog",
         image_size=128,
         train_batch_size=8,
@@ -139,7 +139,8 @@ def main():
         mixed_precision="fp16",
         gradient_accumulation_steps=config.gradient_accumulation_steps,
     )
-    train_loader, val_loader = load_dataloaders(config)
+    # since the dataset is very small, use higher train_size.
+    train_loader, val_loader = load_dataloaders(config, auto_split=True, train_size=0.9)
     # load pretrained model from butterflies-128.
     unet = UNet2DModel.from_pretrained(config.model_repo, subfolder="unet")  # not load weights firstly, use `from_pretrained` to use
     try:
