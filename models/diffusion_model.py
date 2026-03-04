@@ -11,11 +11,11 @@ class DiffusionModel(nn.Module):
     """
     def __init__(self, unet: UNet2DModel, noise_scheduler: DDPMScheduler):
         super().__init__()
-        self.model = unet
+        self.unet = unet
         self.noise_scheduler = noise_scheduler
 
     def forward(self, x, t):
-        noise_pred = self.model(x, t).sample
+        noise_pred = self.unet(x, t).sample
         return noise_pred
 
     def diffusion_loss(

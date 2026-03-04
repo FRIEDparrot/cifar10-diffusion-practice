@@ -1,0 +1,21 @@
+{
+  "max_epoch": 300,
+  "dataset_name": "uoft-cs/cifar10",
+  "model_repo": "google/ddpm-cifar10-32",
+  "image_size": 32,
+  "image_field": "img",
+  "lr": 0.0001,
+  "lr_warmup_steps": 1000,
+  "weight_decay": 1e-05,
+  "train_batch_size": 64,
+  "eval_batch_size": 64,
+  "gradient_accumulation_steps": 2,
+  "remote_repo_id": "FriedParrot/ddpm-cifar10-diffusion",
+  "checkpoint_save_dir": "./checkpoints",
+  "validation_save_dir": "./validation_samples",
+  "checkpoint_epoch": 10,
+  "overwrite_output_dir": true,
+  "reverse_diffusion_steps": 100,
+  "config_save_dir": "./training_configs.json",
+  "gradient_clipping": 1.0
+}

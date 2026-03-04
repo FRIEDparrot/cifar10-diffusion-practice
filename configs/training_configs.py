@@ -19,17 +19,33 @@ class TrainConfigs:
     train_batch_size: int = field(default=64)
     eval_batch_size: int = field(default=64)
     gradient_accumulation_steps: int = field(default=1)  # for larger effective batch size
-    remote_repo_id: str = field(default="FriedParrot/ddpm-cifar10-diffusion")
+    remote_repo_id: str = field(default=None)  # Hugging Face Hub repo ID for logging and checkpointing - MUST be set explicitly
     checkpoint_save_dir: str = field(default="./checkpoints")
     validation_save_dir: str = field(default="./validation_samples")
     checkpoint_epoch: int = field(default=10)
     overwrite_output_dir: bool = field(default=True)
     reverse_diffusion_steps: int = field(default=100)  # number of steps for reverse diffusion during validation
     config_save_dir: str = field(default="./training_configs.json")
+    gradient_clipping: float|None = field(default=1.0)  # Max norm for gradient clipping, set to None to disable
 
     def __post_init__(self):
         """Automatically save config after initialization"""
         self.save()
+        self.validate_for_training()  # Ensure required fields are set before training
+
+    def validate_for_training(self):
+        """
+        Validate that all required configuration is set before training.
+        Call this before starting training to catch configuration errors early.
+
+        :raises ValueError: If remote_repo_id is not set
+        """
+        if self.remote_repo_id is None:
+            raise ValueError(
+                "remote_repo_id must be explicitly set before training! "
+                "This prevents accidental pushes to the wrong Hugging Face Hub repository. "
+                "Set it in TrainConfigs(remote_repo_id='your-username/your-repo-id')"
+            )
 
     def save(self, path: str = None):
         """

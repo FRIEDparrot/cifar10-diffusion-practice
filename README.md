@@ -12,18 +12,21 @@ to config the training parameters :
 accelerate config 
 ```
 
-
-
 ### Exm1: Fine-Tuned diffusion model on dog dataset 
 
 - Model : "anton-l/ddpm-butterflies-128"
 - Dataset : "huggan/few-shot-dog" (This dataset contains 389 images of dogs, 90% for training and 10% for validation)
 - Train on resolution 128
 
+If you want to get the pretrained model for this, go to [hugging face model](https://huggingface.co/FriedParrot/ddpm-few-shot-dog-128)
+
 to launch this training : 
 ```shell
 accelerate launch -m scripts.dogs.train_shot_dog
 ```
+
+generated examples : 
+![samples_epoch_245.png](img/samples_epoch_245.png)
 
 ### Exm2: Train a diffusion model on cifar10 dataset
 
@@ -35,3 +38,27 @@ to launch this training :
 ```shell
 accelerate launch -m scripts.cifar10.train_cifar10
 ```
+
+## Troubleshooting
+
+### RuntimeError: unscale_() has already been called
+
+If you encounter this error with mixed precision training and gradient accumulation, it's been fixed in the latest version. The issue was gradient clipping being called during accumulation steps. Make sure you're using the latest `utils/training_utils.py`.
+
+**Solution**: Gradient clipping now only happens on actual optimization steps (controlled by `accelerator.sync_gradients`).
+
+### Configuration Options
+
+You can customize training behavior via `TrainConfigs`:
+
+```python
+config = TrainConfigs(
+    max_epoch=100,
+    train_batch_size=64,
+    gradient_accumulation_steps=2,  # Effective batch size = 64 * 2 = 128
+    gradient_clipping=1.0,  # Set to None to disable
+    mixed_precision="fp16",  # or "bf16" or None
+    # ... other options
+)
+```
+
