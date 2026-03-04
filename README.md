@@ -11,6 +11,20 @@ to config the training parameters :
 ```shell
 accelerate config 
 ```
+### Train Configuration Options
+
+You can customize training behavior via `TrainConfigs`:
+
+```python
+config = TrainConfigs(
+    max_epoch=100,
+    train_batch_size=64,
+    gradient_accumulation_steps=2,  # Effective batch size = 64 * 2 = 128
+    gradient_clipping=1.0,  # Set to None to disable
+    mixed_precision="fp16",  # or "bf16" or None
+    # ... other options
+)
+```
 
 ### Exm1: Fine-Tuned diffusion model on dog dataset 
 
@@ -37,28 +51,5 @@ generated examples :
 to launch this training : 
 ```shell
 accelerate launch -m scripts.cifar10.train_cifar10
-```
-
-## Troubleshooting
-
-### RuntimeError: unscale_() has already been called
-
-If you encounter this error with mixed precision training and gradient accumulation, it's been fixed in the latest version. The issue was gradient clipping being called during accumulation steps. Make sure you're using the latest `utils/training_utils.py`.
-
-**Solution**: Gradient clipping now only happens on actual optimization steps (controlled by `accelerator.sync_gradients`).
-
-### Configuration Options
-
-You can customize training behavior via `TrainConfigs`:
-
-```python
-config = TrainConfigs(
-    max_epoch=100,
-    train_batch_size=64,
-    gradient_accumulation_steps=2,  # Effective batch size = 64 * 2 = 128
-    gradient_clipping=1.0,  # Set to None to disable
-    mixed_precision="fp16",  # or "bf16" or None
-    # ... other options
-)
 ```
 
