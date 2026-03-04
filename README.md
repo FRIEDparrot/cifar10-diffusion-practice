@@ -53,3 +53,7 @@ to launch this training :
 accelerate launch -m scripts.cifar10.train_cifar10
 ```
 
+The generated examples after 50 epochs :
+![samples_epoch_049.png](img/samples_epoch_049.png)
+
+Note this is not so good, but you may increase `reverse_diffusion_steps`. The default is 100, you can set it to 2000 or more for better results.

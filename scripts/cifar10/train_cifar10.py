@@ -17,8 +17,8 @@ def main():
     :return:
     """
     config = TrainConfigs(
-        max_epoch=300,
-        checkpoint_epoch=10,
+        max_epoch=50,
+        checkpoint_epoch=5,
         model_repo="google/ddpm-cifar10-32",
         dataset_name="uoft-cs/cifar10",
         image_size=32,
@@ -26,9 +26,10 @@ def main():
         gradient_accumulation_steps=2,
         train_batch_size=64,
         eval_batch_size=64,
-        lr_warmup_steps=1000,
+        lr_warmup_steps=500,
         remote_repo_id="FriedParrot/ddpm-cifar10-diffusion",
-        lr=1e-4,
+        reverse_diffusion_steps=100,
+        lr=2e-5,
     )
     train_loader, val_loader = load_dataloaders(config)
     # Load pretrained model without any weights
@@ -53,7 +54,8 @@ def main():
         wandb.init(
             project="ddpm-cifar10-diffusion",
             name="first training run",
-            dir="./wandb_logs"
+            dir="./wandb_logs",
+            config=config.__dict__,
         )
 
     # Training loop
